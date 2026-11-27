@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "document_id": "f4f177c687a540ff874a2ea022584486",
+  "original_filename": "Scanned_20261014-1927-05.jpg",
+  "original_path": "originals/f4f177c687a540ff874a2ea022584486.jpg",
+  "preview_path": "previews/f4f177c687a540ff874a2ea022584486.jpg",
+  "sha256": "2438c1707c0a699a49ba85b64e3b10c3226922c7c5a66fcd8d9e6f197277721e",
+  "size_bytes": 767653,
+  "format": "JPEG",
+  "exif_orientation": 1,
+  "width_px": 1919,
+  "height_px": 2718,
+  "preview_width_px": 1130,
+  "preview_height_px": 1600,
+  "uploaded_at": "2026-10-28T09:40:18+00:00",
+  "status": "ocr_done"
+}

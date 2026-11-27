@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invoice Extractor</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --text: #1d2430;
+      --muted: #5f6b7a;
+      --line: #d9dee5;
+      --accent: #1f6feb;
+      --error: #b42318;
+      --ok: #1a7f37;
+      --low: #c2410c;
+      --pick: #e11d48;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 12px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      font-size: 18px;
+      font-weight: 600;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      height: calc(100vh - 50px);
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 0;
+      overflow: auto;
+    }
+    h2 { margin: 0 0 10px; font-size: 15px; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    input[type=file] { width: 100%; margin-bottom: 8px; }
+    #message { min-height: 20px; margin: 8px 0 14px; font-size: 13px; }
+    #message.error, #read-status.error { color: var(--error); }
+    #message.ok, #read-status.ok { color: var(--ok); }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li button.doc {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+    li button.doc.active { border-color: var(--accent); background: #eef4ff; }
+    .doc-name { display: block; font-size: 14px; word-break: break-all; }
+    .doc-meta { display: block; font-size: 12px; color: var(--muted); }
+
+    /* Right-hand viewer */
+    #viewer { display: flex; flex-direction: column; overflow: hidden; }
+    #details { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    #toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    #toolbar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    #read-status { color: var(--muted); }
+    #selected-info {
+      min-height: 20px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      word-break: break-word;
+    }
+    #empty { color: var(--muted); }
+    #work {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 12px;
+    }
+    #image-pane, #text-pane { min-height: 0; overflow: auto; }
+    #text-pane { border-left: 1px solid var(--line); padding-left: 12px; }
+    #text-pane .note { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+
+    /* The picture, with the boxes laid exactly over it.
+       Boxes use percentages of the picture, so they stay aligned at any size. */
+    #stage {
+      position: relative;
+      max-width: 1600px;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+    #preview { display: block; width: 100%; height: auto; }
+    #overlay { position: absolute; inset: 0; }
+    .box {
+      position: absolute;
+      border: 1.5px solid rgba(31, 111, 235, 0.9);
+      background: rgba(31, 111, 235, 0.10);
+      cursor: pointer;
+    }
+    .box.low {
+      border: 1.5px dashed var(--low);
+      background: rgba(194, 65, 12, 0.14);
+    }
+    .box:hover { background: rgba(31, 111, 235, 0.25); }
+    .box.low:hover { background: rgba(194, 65, 12, 0.28); }
+    .box.selected {
+      border: 2px solid var(--pick);
+      background: rgba(225, 29, 72, 0.22);
+      z-index: 2;
+    }
+
+    /* The list of text pieces */
+    button.seg {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 13px;
+    }
+    button.seg:hover { background: #f0f3f7; }
+    button.seg.selected { border-color: var(--pick); background: #fff1f4; }
+    button.seg .score { flex: none; width: 34px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    button.seg.low .score { color: var(--low); font-weight: 600; }
+    button.seg .txt { white-space: pre-wrap; word-break: break-word; }
+    button.seg .txt.blank { color: var(--muted); font-style: italic; }
+
+    @media (max-width: 1100px) {
+      #work { display: block; overflow: auto; }
+      #image-pane, #text-pane { overflow: visible; }
+      #text-pane { border-left: 0; padding-left: 0; margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>Invoice Extractor</header>
+  <main>
+    <section>
+      <h2>Upload an invoice</h2>
+      <input id="file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+      <button id="upload">Upload</button>
+      <div id="message"></div>
+      <h2>Uploaded invoices</h2>
+      <ul id="list"></ul>
+    </section>
+
+    <section id="viewer">
+      <div id="details"></div>
+      <div id="toolbar" hidden>
+        <button id="read">Read invoice</button>
+        <label><input type="checkbox" id="show-boxes" checked> Show text boxes</label>
+        <span id="read-status"></span>
+      </div>
+      <div id="selected-info"></div>
+      <p id="empty">Choose an invoice on the left to preview it.</p>
+      <div id="work" hidden>
+        <div id="image-pane">
+          <div id="stage">
+            <img id="preview" alt="Invoice preview">
+            <div id="overlay"></div>
+          </div>
+        </div>
+        <aside id="text-pane">
+          <h2>Text found <span id="seg-count"></span></h2>
+          <p class="note">A score shows how sure the reader is about the characters.
+            It does not show that a value is correct. Dashed amber means a lower score.</p>
+          <div id="seg-list"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

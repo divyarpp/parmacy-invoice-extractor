@@ -1,0 +1,30 @@
+{
+  "run_at": "2026-10-24T18:28:34",
+  "source_file": "Scanned_20261014-1927-01.jpg",
+  "source_sha256": "afb5b87b1c931f45b93ab756eca94228c88b2917647c3eeb49b627dcb3f359d5",
+  "file_size_px": [
+    2071,
+    1461
+  ],
+  "ocr_size_px": [
+    2071,
+    1461
+  ],
+  "detection_model": "PP-OCRv5_mobile_det",
+  "recognition_model": "en_PP-OCRv5_mobile_rec",
+  "settings": {
+    "use_doc_orientation_classify": false,
+    "use_doc_unwarping": false,
+    "use_textline_orientation": false
+  },
+  "seconds_load_models": 1.91,
+  "seconds_read_image": 12.59,
+  "packages": {
+    "paddlepaddle": "3.2.0",
+    "paddleocr": "3.4.1",
+    "paddlex": "3.4.3",
+    "numpy": "2.4.1",
+    "opencv-contrib-python": "4.10.0.84",
+    "Pillow": "12.1.0"
+  }
+}
